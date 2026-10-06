@@ -1,56 +1,68 @@
-# Lạc · get lost on purpose
+# Đi đây
 
-*Lạc* is Vietnamese for "lost". Lạc gives you a deck of walking rules and sends you out without a map.
-At each stop you take one photo and record ten seconds of sound. Back home, an open-weight model on your
-own computer looks at every photo and listens to every recording, then turns the walk into a printable
-eight-page zine and a one-minute soundwalk.
+*Đi đây* is Vietnamese for "I'm off". I sit at my computer all day hunting bounties and hackathons. The only
+time I go outside is a 200-metre walk to buy lunch, and I hurry back because every minute away feels like a
+missed listing.
 
-Built for the DEV Hacktoberfest Open-Source AI Challenge, week 1: *Touch Grass*.
+So the laptop works while I'm out. When I get up, I press **Đi đây**. Gemma 4, running on this computer,
+reads the new listings and checks the fine print the way my
+[Bounty Triage benchmark](https://www.kaggle.com/benchmarks/shenjun93/bounty-triage) does: hidden gates (a live
+interview, a card, in-person attendance), whether Vietnam is eligible, and the real deadline in Vietnam time.
+On my 2018 laptop that takes about a minute per listing, so the slowness is the walk.
 
-## Two halves, no server
+The results stay locked until I come back with one photo and ten seconds of sound from outside. Gemma listens
+to the recording and looks at the photo, and only then opens the list.
 
-| | runs on | needs a network? | what it does |
-|---|---|---|---|
-| **Pocket** (`index.html`) | any phone browser | no (installable PWA, works in airplane mode) | deals rule cards, reads them aloud, records one photo + 10 s of sound per stop, keeps a GPS trace |
-| **Base** (`base.html`) | your computer | no (after the one-time model download) | Gemma 4 E4B writes the rules before the walk, and reads the photos and sounds after it |
+## How it works
 
-Scores travel from base to pocket inside a QR code (the rules are compressed into the URL fragment, which is
-never sent to any server). Walks travel back as a single `.lac` file through the phone's share sheet.
+| piece | where it runs | what it does |
+|---|---|---|
+| `server.mjs` | this computer (Node, no dependencies) | the dashboard, the trip, the queue, the lock |
+| `sources/` | this computer | fetches open listings from Superteam Earn and Devpost |
+| `brain.mjs` | this computer | asks Gemma 4 E4B (llama.cpp) to triage each listing and to check the photo and sound |
+| `public/out.html` | the phone, on home wifi | one photo, ten seconds of sound, "I'm back" |
 
-## Why open weights
+Things I learned the hard way, and kept in the code:
 
-The photos are of my street, and the recordings have my neighbours in them. With an open model running on
-my own machine, none of that leaves the house. It also costs nothing per walk, works with no signal, and
-anyone can change the rules the model writes by editing one prompt.
+- **Time zones are converted in code, not by the model.** My benchmark showed small models getting
+  "11:59 PM PDT" wrong in Vietnam time. Gemma copies the deadline and zone as written; `deadlineInVietnam` does the maths.
+- **It listens before it looks.** With the photo and the sound in one prompt, Gemma described traffic in a
+  recording of a speech: it was reading the photo. Now the sound goes in alone first.
+- **Speech is described, never transcribed.** The recordings have my neighbours in them.
+- **A pre-recorded video is not a "live interview".** The first version marked every "submit a demo video"
+  bounty as a live interview. The prompt now carries the benchmark's definitions.
 
-## Run the base
+The dashboard only answers to this computer. The phone page answers on the local network at a random URL
+that exists for one trip. Nothing goes to a cloud API.
 
-The base uses [llama.cpp](https://github.com/ggml-org/llama.cpp)'s `llama-server`, which runs Gemma 4 with
-image and audio input on a plain CPU:
+## Run it
 
 ```bash
-# CPU only
+# 1. the brain: Gemma 4 E4B with image and audio input, via llama.cpp
 docker run -d --name lac-brain -p 127.0.0.1:8090:8080 -v lac-models:/root/.cache/llama.cpp \
   ghcr.io/ggml-org/llama.cpp:server \
   -hf ggml-org/gemma-4-E4B-it-GGUF:Q4_0 --host 0.0.0.0 --port 8080 -c 8192 --jinja --no-webui
+#    with an NVIDIA GPU (mine has 4 GB): use the :server-cuda image, add --gpus all and -ngl 8
 
-# with an NVIDIA GPU (even a 4 GB one): the image and audio encoders and a few layers move to the GPU
-docker run -d --name lac-brain --gpus all -p 127.0.0.1:8090:8080 -v lac-models:/root/.cache/llama.cpp \
-  ghcr.io/ggml-org/llama.cpp:server-cuda \
-  -hf ggml-org/gemma-4-E4B-it-GGUF:Q4_0 --host 0.0.0.0 --port 8080 -c 8192 -ngl 8 --jinja --no-webui
-
-node serve.mjs . 8787
+# 2. the app
+node server.mjs
 ```
 
-Then open <http://localhost:8787/base.html>. The first start downloads about 5 GB of weights.
-`node tools/smoke-brain.mjs` checks the brain end to end with public sample media.
+Open <http://localhost:8787>. The first start downloads about 5 GB of model weights.
+Edit `PROFILE` in `brain.mjs` (or set the `PROFILE` environment variable) to describe who the listings are for,
+and add a source in `sources/index.mjs` to read something other than bounties.
+
+## Before this
+
+This repository started as *Lạc*, a walking-game with AI-written rules and a printable zine (its last version is commit
+[`400a23a`](https://github.com/ShenJun93/di-day/tree/400a23a)). It looked like something a machine would make, so I threw it away and built the thing I
+actually needed.
 
 ## Credits
 
 - [Gemma 4](https://ai.google.dev/gemma) by Google DeepMind (Apache 2.0)
 - [llama.cpp](https://github.com/ggml-org/llama.cpp) (MIT)
 - [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) by Kazuhiko Arase (MIT), vendored in `vendor/`
-- The idea of the *dérive* comes from Guy Debord and the Situationists; the rule cards owe a lot to Fluxus event scores.
 
 ## License
 

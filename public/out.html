@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đi đây · outside</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<p class="mono muted">đi đây</p>
+<h1>Đi đi. The laptop is working.</h1>
+<p class="muted">Outside, do two small things. No signal needed until you are back on home wifi.</p>
+
+<div class="card">
+  <p><b>1 · One photo</b> <span class="muted">· một tấm ảnh ngoài trời (bầu trời, con đường, quán cơm…)</span></p>
+  <label class="button" for="photo">📷 Take photo</label>
+  <input id="photo" type="file" accept="image/*" capture="environment">
+  <p id="photoState" class="mono small"></p>
+</div>
+
+<div class="card">
+  <p><b>2 · Ten seconds of sound</b> <span class="muted">· đứng yên, thu 10 giây tiếng đường phố</span></p>
+  <label class="button" for="sound">🎙 Record</label>
+  <input id="sound" type="file" accept="audio/*" capture>
+  <p id="soundState" class="mono small"></p>
+</div>
+
+<div class="row"><button class="big" id="back" disabled>I'm back · về rồi</button></div>
+<p id="result"></p>
+<p class="small muted">Faces and house numbers stay out of the photo, please. The sound is described by the model,
+  never transcribed, and none of it leaves the computer at home.</p>
+
+<script type="module">
+import { toWav16k, shrinkPhoto, toBase64 } from "/static/audio.js";
+const $ = (id) => document.getElementById(id);
+const token = location.pathname.split("/").pop();
+let photo = null, sound = null;
+const ready = () => ($("back").disabled = !(photo || sound));
+
+$("photo").onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  photo = await shrinkPhoto(f);
+  $("photoState").textContent = `photo ✓ ${(photo.size / 1024).toFixed(0)} KB`;
+  ready();
+};
+$("sound").onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    sound = await toWav16k(f);
+    $("soundState").textContent = `sound ✓ ${(sound.size / 32000).toFixed(1)} s`;
+  } catch (err) {
+    $("soundState").textContent = `could not read that recording (${err.message}). Try again.`;
+  }
+  ready();
+};
+$("back").onclick = async () => {
+  $("back").disabled = true;
+  $("result").textContent = "Listening and looking… (about a minute on this laptop)";
+  try {
+    const body = JSON.stringify({ photoB64: photo && await toBase64(photo), audioB64: sound && await toBase64(sound) });
+    const r = await (await fetch(`/api/back/${token}`, { method: "POST", headers: { "content-type": "application/json" }, body })).json();
+    if (r.error) $("result").textContent = r.error;
+    else if (r.unlocked) $("result").textContent = `Unlocked. Heard: ${r.heard || "—"}. Look at the laptop.`;
+    else $("result").textContent = `Hmm, that sounds and looks like indoors (${r.heard || r.saw}). Try a photo or sound from outside.`;
+  } catch (err) {
+    $("result").textContent = "Not on home wifi yet? " + err.message;
+  }
+  $("back").disabled = false;
+};
+</script>
+</body>
+</html>

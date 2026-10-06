@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đi đây</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<p class="mono muted">đi đây · "I'm off"</p>
+<h1>Going for lunch?</h1>
+<p class="muted">Press the button when you get up. While you are out, Gemma reads new bounties and hackathons on this
+  computer. The results stay locked until you come back with a photo and ten seconds of sound from outside.</p>
+<p id="brain" class="mono small"></p>
+
+<section id="idle" class="hidden">
+  <div class="row"><button class="big" id="go">Đi đây — I'm off</button></div>
+  <p class="small muted">Up to 20 new listings per trip, soonest deadline first. On this laptop that takes a while: that is the point.</p>
+</section>
+
+<section id="out" class="hidden">
+  <div class="card">
+    <p class="mono" id="status"></p>
+    <p style="font-size:1.3rem;margin:.3em 0" id="away"></p>
+    <div class="row">
+      <div class="qr" id="qr"></div>
+      <p class="small" style="max-width:420px">Scan this with your phone <b>before you leave</b>. Outside, take one photo and
+        record ten seconds of sound on that page. When you are back on home wifi, press <b>I'm back</b> there.</p>
+    </div>
+  </div>
+  <p class="small muted">Results are locked. <button id="skip" class="small">Open without proof</button>
+    <span class="small muted">(the log will say you skipped)</span></p>
+</section>
+
+<section id="back" class="hidden">
+  <div class="card" id="proof"></div>
+  <h2>What it found while you were out</h2>
+  <table id="results"></table>
+  <div class="row"><button id="again">Done · next trip</button></div>
+</section>
+
+<h2>Trips</h2>
+<table id="log"></table>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const el = (tag, text, cls) => { const e = document.createElement(tag); if (text != null) e.textContent = text; if (cls) e.className = cls; return e; };
+const post = (p) => fetch(p, { method: "POST" }).then((r) => r.json());
+
+function render(s) {
+  $("brain").textContent = s.brainOnline ? "brain: Gemma 4 E4B on this computer · online" : "brain offline: start llama-server (see README)";
+  for (const id of ["idle", "out", "back"]) $(id).classList.toggle("hidden", s.phase !== id);
+  if (s.phase === "out") {
+    $("status").textContent = s.status === "done" ? `read ${s.read} of ${s.total} · finished, waiting for you` : `${s.status} · ${s.read} of ${s.total || "?"} read`;
+    $("away").textContent = `You have been out ${Math.round((Date.now() - s.outAt) / 60000)} min.`;
+    if (!$("qr").dataset.url || $("qr").dataset.url !== s.phoneUrl) { $("qr").innerHTML = s.qr; $("qr").dataset.url = s.phoneUrl; }
+  }
+  if (s.phase === "back") {
+    const p = s.proof || {};
+    $("proof").replaceChildren(
+      el("p", p.skipped ? "Opened without proof." : `Out for ${Math.round((s.backAt - s.outAt) / 60000)} min. Read ${s.read} listings meanwhile.`),
+      ...(p.heard ? [el("p", `Heard: ${p.heard}`, "small")] : []),
+      ...(p.saw ? [el("p", `Saw: ${p.saw}`, "small")] : []),
+    );
+    $("results").replaceChildren(...(s.results || []).map((r) => {
+      const tr = el("tr");
+      const a = el("a", r.title); a.href = r.url; a.target = "_blank";
+      const left = el("td"); left.append(el("span", r.worth, `pill ${r.worth}`), " ", a,
+        el("div", `${r.source} · ${r.prize || "prize ?"} · deadline ${r.deadlineVn || r.deadline_as_written || "?"}`, "small muted"));
+      const right = el("td");
+      right.append(el("div", r.why || "", "small"));
+      if (r.gate && r.gate !== "none") right.append(el("div", `catch: ${r.gate}${r.gate_quote ? ` — “${r.gate_quote}”` : ""}`, "small mono"));
+      if (r.eligible_vietnam && r.eligible_vietnam !== "yes") right.append(el("div", `Vietnam: ${r.eligible_vietnam}`, "small mono"));
+      tr.append(left, right);
+      return tr;
+    }));
+  }
+  $("log").replaceChildren(...s.log.slice().reverse().map((t) => {
+    const tr = el("tr");
+    tr.append(el("td", new Date(t.outAt).toLocaleString(), "small"), el("td", `${t.minutes} min out`, "small"),
+      el("td", `${t.readWhileOut} read`, "small"), el("td", t.skipped ? "skipped proof" : t.heard || "", "small muted"));
+    return tr;
+  }));
+}
+
+async function refresh() { render(await (await fetch("/api/state")).json()); }
+$("go").onclick = async () => { $("go").disabled = true; render(await post("/api/go")); $("go").disabled = false; };
+$("skip").onclick = async () => confirm("Open the results without a photo and sound?") && render(await post("/api/unlock"));
+$("again").onclick = async () => render(await post("/api/reset"));
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>
