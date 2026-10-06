@@ -9,7 +9,7 @@ import { renderZine } from "./zine.js";
 const $ = (id) => document.getElementById(id);
 // Where the phone app lives. The QR code points there with the score in the URL fragment,
 // which browsers never send to the server.
-const POCKET_URL = localStorage.getItem("lac.pocket") || new URL("index.html", location.href).href;
+const POCKET_URL = localStorage.getItem("lac.pocket") || "https://shenjun93.github.io/lac/";
 
 let seedPhoto = null;
 let lastScore = null;
