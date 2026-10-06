@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lạc base: the brain at home</title>
+<link rel="icon" href="icon.svg">
+<link rel="stylesheet" href="css/lac.css">
+<style>
+  body { max-width: 980px; }
+  .stop { display: grid; grid-template-columns: 220px 1fr; gap: 16px; margin: 14px 0; align-items: start; }
+  .stop img { width: 220px; aspect-ratio: 1; object-fit: cover; border-radius: 10px; }
+  .stop canvas { width: 100%; height: 40px; }
+  #qr canvas, #qr img { width: 260px; height: 260px; image-rendering: pixelated; background: #fff; padding: 10px; border-radius: 8px; }
+  ol.cards li { margin: 6px 0; }
+  ol.cards .kind { margin-right: 6px; }
+  @media (max-width: 640px) { .stop { grid-template-columns: 1fr; } .stop img { width: 100%; } }
+</style>
+<script src="vendor/qrcode.js"></script>
+</head>
+<body>
+<p class="kind">base</p>
+<h1>Lạc<span>.</span> base</h1>
+<p>This page runs on the walker's own computer. The model is <b>Gemma 4 E4B</b>, open weights, served by
+  <a href="https://github.com/ggml-org/llama.cpp">llama.cpp</a> on this machine. It writes the rules before a walk, and
+  afterwards it looks at every photo and listens to every recording. The phone and the walk never touch a server.</p>
+<p class="meta" id="brain">checking the brain…</p>
+
+<h2>1 · Compose a score</h2>
+<div class="card">
+  <div class="row">
+    <label>Language <select id="lang"><option value="en">English</option><option value="vi">Tiếng Việt</option></select></label>
+    <label>Minutes <input id="minutes" type="number" min="15" max="45" value="40" style="width:5em"></label>
+  </div>
+  <p class="small muted">Optional: a few words about the neighbourhood, and a photo of the view from home.</p>
+  <textarea id="about" rows="2" placeholder="e.g. narrow alleys, a wet market, a lake two streets away"></textarea>
+  <div class="row">
+    <label class="button" for="seedIn">Add a photo from home</label>
+    <input id="seedIn" type="file" accept="image/*">
+    <span id="seedName" class="meta"></span>
+  </div>
+  <div class="row"><button class="primary" id="compose">Write the rules</button><span id="composeState" class="meta"></span></div>
+</div>
+<div id="scoreOut" class="hidden">
+  <h3 id="scoreTitle"></h3>
+  <ol class="cards" id="cards"></ol>
+  <div class="row" style="align-items:center">
+    <div id="qr"></div>
+    <p class="small muted" style="max-width:420px">Scan with the phone camera. The whole score travels inside the QR code,
+      so the phone needs no connection to receive it. <span id="qrUrl" class="meta"></span></p>
+  </div>
+</div>
+
+<h2>2 · Bring a walk home</h2>
+<div class="card">
+  <div class="row">
+    <label class="button primary" for="walkIn">Open a .lac file</label>
+    <input id="walkIn" type="file" accept=".lac,application/json">
+    <span id="readState" class="meta"></span>
+  </div>
+</div>
+<div id="walkOut" class="hidden">
+  <h3 id="walkTitle"></h3>
+  <div id="stops"></div>
+  <h3>After</h3>
+  <pre id="poem" style="font: italic 1.3rem/1.5 inherit"></pre>
+  <h3>Soundwalk</h3>
+  <audio id="sound" controls></audio>
+  <div class="row"><a class="button" id="soundDl" download="soundwalk.wav">Download soundwalk.wav</a></div>
+  <h3>Zine</h3>
+  <p class="small muted">Print on A4, fold in eight, cut the dashed red line, and fold into a booklet.</p>
+  <canvas id="zinePreview" width="1754" height="1240" style="width:100%;border:1px solid var(--line)"></canvas>
+  <div class="row"><a class="button" id="zineDl" download="lac-zine.png">Download zine (A4, 300 dpi)</a></div>
+</div>
+
+<script type="module" src="js/base.js"></script>
+</body>
+</html>
