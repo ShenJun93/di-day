@@ -39,6 +39,11 @@ export function sanitizeScore(raw) {
     .slice(0, 14);
   if (cards.length < 6) return { ...DEFAULT_SCORE };
   if (cards[cards.length - 1].kind !== "home") cards.push(DEFAULT_SCORE.cards.at(-1));
+  // A walk needs stops to become a zine. Small models sometimes write fewer than asked: top up from the default deck.
+  const spare = DEFAULT_SCORE.cards.filter((c) => c.kind === "stop");
+  for (let pos = 3; cards.filter((c) => c.kind === "stop").length < 3 && spare.length; pos += 3) {
+    cards.splice(Math.min(pos, cards.length - 1), 0, spare.shift());
+  }
   return {
     v: 1,
     title: String(raw.title || "Untitled drift").slice(0, 60),

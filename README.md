@@ -29,13 +29,17 @@ The base uses [llama.cpp](https://github.com/ggml-org/llama.cpp)'s `llama-server
 image and audio input on a plain CPU:
 
 ```bash
-docker run -d --name lac-brain -p 127.0.0.1:8090:8080 \
-  -v "$PWD/.models:/root/.cache/llama.cpp" -v "$PWD:/site:ro" \
-  ghcr.io/ggml-org/llama.cpp:server \
-  -hf ggml-org/gemma-4-E4B-it-GGUF:Q4_0 --host 0.0.0.0 --port 8080 -c 8192 --jinja --path /site --no-webui
+# CPU only
+docker run -d --name lac-brain -p 127.0.0.1:8090:8080 -v lac-models:/root/.cache/llama.cpp   ghcr.io/ggml-org/llama.cpp:server   -hf ggml-org/gemma-4-E4B-it-GGUF:Q4_0 --host 0.0.0.0 --port 8080 -c 8192 --jinja --no-webui
+
+# with an NVIDIA GPU (even a 4 GB one): the image and audio encoders and a few layers move to the GPU
+docker run -d --name lac-brain --gpus all -p 127.0.0.1:8090:8080 -v lac-models:/root/.cache/llama.cpp   ghcr.io/ggml-org/llama.cpp:server-cuda   -hf ggml-org/gemma-4-E4B-it-GGUF:Q4_0 --host 0.0.0.0 --port 8080 -c 8192 -ngl 8 --jinja --no-webui
+
+node serve.mjs . 8787
 ```
 
-Then open <http://localhost:8090/base.html>. The first start downloads about 5 GB of weights.
+Then open <http://localhost:8787/base.html>. The first start downloads about 5 GB of weights.
+`node tools/smoke-brain.mjs` checks the brain end to end with public sample media.
 
 ## Credits
 
