@@ -93,7 +93,7 @@ export async function listen(audioBlob, lang = "en") {
     {
       type: "text",
       text:
-        `Listen to this ten-second street recording. In one sentence of ${LANG[lang]}, describe the soundscape: ` +
+        `Listen to this ten-second recording. In one sentence of ${LANG[lang]}, describe the soundscape: ` +
         `name each distinct sound you can actually hear and where it seems to be (near, far, passing). ` +
         `If people are talking, say so and describe the voices, but never write down what they say. ` +
         `If the recording is mostly silence or wind, say that.`,

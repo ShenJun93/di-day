@@ -151,8 +151,8 @@ export async function renderZine(walk, readings, poem, qrCanvas = null) {
 
   panel(g, "back", () => {
     g.fillStyle = INK; g.font = `30px ${SERIF}`;
-    let y = wrap(g, "Made without a server. The rules, the reading of each photo and the listening to each sound " +
-      "were done by Gemma 4 E2B, an open-weight model, running in a browser on the walker's own computer. " +
+    let y = wrap(g, "Made without a cloud. The rules, the reading of each photo and the listening to each sound " +
+      "were done by Gemma 4 E4B, an open-weight model, running with llama.cpp on the walker's own computer. " +
       "Nothing left the house.", M, M, PW - 2 * M, 40);
     if (qrCanvas) {
       g.font = `28px ${MONO}`; g.fillText("Walk this score yourself:", M, y + 50);
