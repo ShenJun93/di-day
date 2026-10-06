@@ -28,9 +28,10 @@ export const DEFAULT_SCORE = {
 // Rules every generated card must respect. Shown to the model and checked again here.
 export const SAFETY_NOTE =
   "Never ask the walker to cross against traffic, enter private property, follow anyone closely, " +
-  "touch strangers, climb, or go near water edges or rail tracks. Daylight walking only.";
+  "touch strangers, climb, or go near water edges or rail tracks. Never ask for photos of faces, house numbers or " +
+  "licence plates, and never ask to record a particular person. Daylight walking only.";
 
-const BANNED = /(cross (the road|against)|private|trespass|climb|rail(way)? track|jump|touch (a |the )?stranger|swim)/i;
+const BANNED = /(cross (the road|against)|private|trespass|climb|rail(way)? track|jump|touch (a |the )?stranger|swim|house number|licen[cs]e plate|bfaces?b|số nhà|biển số|khuôn mặt)/i;
 
 export function sanitizeScore(raw) {
   const cards = (raw?.cards || [])
