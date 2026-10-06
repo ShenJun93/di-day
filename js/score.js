@@ -31,7 +31,7 @@ export const SAFETY_NOTE =
   "touch strangers, climb, or go near water edges or rail tracks. Never ask for photos of faces, house numbers or " +
   "licence plates, and never ask to record a particular person. Daylight walking only.";
 
-const BANNED = /(cross (the road|against)|private|trespass|climb|rail(way)? track|jump|touch (a |the )?stranger|swim|house number|licen[cs]e plate|bfaces?b|số nhà|biển số|khuôn mặt)/i;
+const BANNED = /(cross (the road|against)|private|trespass|climb|rail(way)? track|jump|touch (a |the )?stranger|swim|house number|licen[cs]e plate|\bfaces?\b|số nhà|biển số|khuôn mặt)/i;
 
 export function sanitizeScore(raw) {
   const cards = (raw?.cards || [])
