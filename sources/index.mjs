@@ -8,6 +8,9 @@ export function htmlToText(html) {
   return String(html || "")
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    // Devpost hides an "unsupported browser, upgrade to Internet Explorer 10" banner in a comment; Gemma read it as a rule.
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
     .replace(/<(br|\/p|\/li|\/h\d|\/tr|\/div)>/gi, "\n")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
