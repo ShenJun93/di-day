@@ -8,7 +8,8 @@ So the laptop works while I'm out. When I get up, I press **Đi đây**. Gemma 4
 reads the new listings and checks the fine print the way my
 [Bounty Triage benchmark](https://www.kaggle.com/benchmarks/shenjun93/bounty-triage) does: hidden gates (a live
 interview, a card, in-person attendance), whether Vietnam is eligible, and the real deadline in Vietnam time.
-On my 2018 laptop that takes about a minute per listing, so the slowness is the walk.
+On my old laptop that takes about half a minute per listing. On the first real trip it read 20 listings in
+ten and a half minutes; lunch took 58.
 
 The results stay locked until I come back with one photo and ten seconds of sound from outside. Gemma listens
 to the recording and looks at the photo, and only then opens the list.
@@ -31,6 +32,9 @@ Things I learned the hard way, and kept in the code:
 - **Speech is described, never transcribed.** The recordings have my neighbours in them.
 - **A pre-recorded video is not a "live interview".** The first version marked every "submit a demo video"
   bounty as a live interview. The prompt now carries the benchmark's definitions.
+- **A catch needs the words.** Even with the definitions, the first real trip called "Record a pitch video and
+  a demo video" a live interview three times, and flagged a payment card from a quote that never mentions one.
+  Now each catch must have one of its words in the quote Gemma gives, or `checkGate` drops it and the list says so.
 
 The dashboard only answers to this computer. The phone page answers on the local network at a random URL
 that exists for one trip. Nothing goes to a cloud API.

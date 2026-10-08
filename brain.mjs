@@ -63,7 +63,28 @@ export async function triage(listing) {
       ` "effort": "hours" | "days" | "weeks",\n` +
       ` "why": "one plain sentence a busy person can act on"}`,
   }], { json: true, maxTokens: 260 });
-  return { ...parseJSON(text), secs };
+  return { ...checkGate(parseJSON(text)), secs };
+}
+
+// A catch only counts if the words Gemma quotes actually say it. On the first real trip it still called
+// "Record a pitch video and a demo video" a live interview, and guessed a payment card from a quote that
+// never mentions one. Each gate needs one of its words in the quote, or it is dropped and the drop is shown.
+const GATE_WORDS = {
+  live_interview: /\blive\b|interview|\bcalls?\b|zoom|google meet|in real time|q ?& ?a|on stage/i,
+  in_person: /on-?site|in[- ]person|venue|attend|physical|travel|located in/i,
+  card_required: /\bcard\b|credit|debit|payment method|billing/i,
+  kyc: /\bkyc\b|identity|verif|passport|government id/i,
+  hired_first: /\bhire|contract|employ/i,
+  own_cloud_account: /cloud|aws|azure|gcp|account/i,
+};
+
+export function checkGate(t) {
+  const words = GATE_WORDS[t.gate];
+  if (!words || words.test(t.gate_quote || "")) return t;
+  const out = { ...t, gate: "none", gate_dropped: t.gate };
+  // If the dropped catch was the only thing against it, it is back in play.
+  if (t.worth === "no" && t.eligible_vietnam !== "no") out.worth = "maybe";
+  return out;
 }
 
 // --- time zones, done in code ------------------------------------------------------------------

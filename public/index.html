@@ -70,6 +70,7 @@ function render(s) {
       const right = el("td");
       right.append(el("div", r.why || "", "small"));
       if (r.gate && r.gate !== "none") right.append(el("div", `catch: ${r.gate}${r.gate_quote ? ` — “${r.gate_quote}”` : ""}`, "small mono"));
+      if (r.gate_dropped) right.append(el("div", `Gemma said ${r.gate_dropped}, but its quote does not say so${r.gate_quote ? ` (“${r.gate_quote}”)` : ""}: dropped`, "small mono muted"));
       if (r.eligible_vietnam && r.eligible_vietnam !== "yes") right.append(el("div", `Vietnam: ${r.eligible_vietnam}`, "small mono"));
       tr.append(left, right);
       return tr;
