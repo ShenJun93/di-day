@@ -17,3 +17,4 @@ button:disabled { opacity: .45; cursor: default; }
 input[type=file] { display: none; }
 table { width: 100%; border-collapse: collapse; } td { padding: 8px 6px; border-top: 1px solid var(--line); vertical-align: top; }
 .hidden { display: none !important; }
+a { color: inherit; text-decoration-color: var(--muted); text-underline-offset: 3px; }
